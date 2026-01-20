@@ -59,6 +59,33 @@ impl TreeNode {
             TreeNode::Logs => "[L]",
         }
     }
+
+    pub fn shortcut_key(&self) -> char {
+        match self {
+            TreeNode::Overview => '*',
+            TreeNode::Cpu => 'c',
+            TreeNode::Memory => 'm',
+            TreeNode::Disks => 'd',
+            TreeNode::Network => 'n',
+            TreeNode::Processes => 'p',
+            TreeNode::Devices => 'v',
+            TreeNode::Logs => 'l',
+        }
+    }
+
+    pub fn from_shortcut(key: char) -> Option<TreeNode> {
+        match key.to_ascii_lowercase() {
+            '*' => Some(TreeNode::Overview),
+            'c' => Some(TreeNode::Cpu),
+            'm' => Some(TreeNode::Memory),
+            'd' => Some(TreeNode::Disks),
+            'n' => Some(TreeNode::Network),
+            'p' => Some(TreeNode::Processes),
+            'v' => Some(TreeNode::Devices),
+            'l' => Some(TreeNode::Logs),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -304,6 +331,16 @@ impl App {
             return;
         }
 
+        // Handle shortcut keys to open tabs directly (only when focused on tree)
+        if self.focus == Focus::Tree {
+            if let KeyCode::Char(c) = key {
+                if let Some(node) = TreeNode::from_shortcut(c) {
+                    self.open_tab_by_node(node);
+                    return;
+                }
+            }
+        }
+
         match self.focus {
             Focus::Tree => self.handle_tree_input(key),
             Focus::Tabs => self.handle_tabs_input(key),
@@ -322,7 +359,7 @@ impl App {
                     self.selected_tree_index += 1;
                 }
             }
-            KeyCode::Enter | KeyCode::Right | KeyCode::Char('l') => {
+            KeyCode::Enter | KeyCode::Right => {
                 self.open_or_switch_tab();
             }
             KeyCode::Char(c) if c.is_ascii_digit() => {
@@ -405,7 +442,10 @@ impl App {
 
     fn open_or_switch_tab(&mut self) {
         let node = self.tree_nodes[self.selected_tree_index];
+        self.open_tab_by_node(node);
+    }
 
+    fn open_tab_by_node(&mut self, node: TreeNode) {
         // Check if tab already exists
         if let Some(idx) = self.tabs.iter().position(|t| t.node == node) {
             self.active_tab_index = idx;
@@ -413,6 +453,11 @@ impl App {
             // Create new tab
             self.tabs.push(Tab::new(node));
             self.active_tab_index = self.tabs.len() - 1;
+        }
+
+        // Update tree selection to match
+        if let Some(idx) = self.tree_nodes.iter().position(|&n| n == node) {
+            self.selected_tree_index = idx;
         }
 
         self.focus = Focus::Tabs;

@@ -2,7 +2,7 @@ use crate::app::{App, Focus, TreeNode};
 use crate::ui::widgets;
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, Tabs as RatTabs},
+    widgets::{Block, Borders},
 };
 
 pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
@@ -14,50 +14,15 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
         Style::default().fg(Color::DarkGray)
     };
 
-    // Split area into tab bar and content
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(0)])
-        .split(area);
-
-    // Draw tab bar
-    let tab_titles: Vec<Line> = app
-        .tabs
-        .iter()
-        .enumerate()
-        .map(|(i, tab)| {
-            let num = i + 1;
-            let title = format!(" {}:{} ", num, tab.node.name());
-            Line::from(title)
-        })
-        .collect();
-
-    let tab_bar = RatTabs::new(tab_titles)
-        .block(
-            Block::default()
-                .title(" Tabs ")
-                .borders(Borders::ALL)
-                .border_style(border_style),
-        )
-        .select(app.active_tab_index)
-        .style(Style::default().fg(Color::White))
-        .highlight_style(
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        );
-
-    frame.render_widget(tab_bar, chunks[0]);
-
-    // Draw active tab content
+    // Draw active tab content directly (no tab bar)
     if let Some(tab) = app.active_tab() {
         let content_block = Block::default()
             .borders(Borders::ALL)
             .border_style(border_style)
             .title(format!(" {} ", tab.node.name()));
 
-        let inner_area = content_block.inner(chunks[1]);
-        frame.render_widget(content_block, chunks[1]);
+        let inner_area = content_block.inner(area);
+        frame.render_widget(content_block, area);
 
         match tab.node {
             TreeNode::Overview => widgets::overview::draw(frame, app, inner_area),
