@@ -28,6 +28,17 @@
           ];
 
           shellHook = ''
+            echo ""
+            echo "╭─────────────────────────────────────╮"
+            echo "│   Linux System Center Dev Shell     │"
+            echo "├─────────────────────────────────────┤"
+            echo "│  Available commands:                │"
+            echo "│    cargo run     - Run the app      │"
+            echo "│    cargo build   - Build the app    │"
+            echo "│    cargo test    - Run tests        │"
+            echo "│    cargo check   - Check for errors │"
+            echo "╰─────────────────────────────────────╯"
+            echo ""
             exec ${pkgs.nushell}/bin/nu
           '';
         };
