@@ -24,16 +24,11 @@
             rustToolchain
             pkg-config
             openssl
+            nushell
           ];
 
           shellHook = ''
-            echo "Linux System Center Development Environment"
-            echo "Rust: $(rustc --version)"
-            echo ""
-            echo "Commands:"
-            echo "  cargo run    - Run the application"
-            echo "  cargo build  - Build the application"
-            echo "  cargo test   - Run tests"
+            exec ${pkgs.nushell}/bin/nu
           '';
         };
 
