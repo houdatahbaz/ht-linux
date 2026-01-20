@@ -104,6 +104,10 @@ pub struct App {
     pub command_error: Option<String>,
     pub show_device_popup: bool,
     pub selected_device_index: Option<usize>,
+    pub show_kill_confirm: bool,
+    pub kill_target_pid: Option<u32>,
+    pub kill_target_name: Option<String>,
+    pub status_message: Option<String>,
 }
 
 impl App {
@@ -122,6 +126,10 @@ impl App {
             command_error: None,
             show_device_popup: false,
             selected_device_index: None,
+            show_kill_confirm: false,
+            kill_target_pid: None,
+            kill_target_name: None,
+            status_message: None,
         }
     }
 
@@ -234,6 +242,26 @@ impl App {
     }
 
     fn handle_normal_input(&mut self, key: KeyCode) {
+        // Clear status message on any key
+        self.status_message = None;
+
+        // Handle kill confirmation popup
+        if self.show_kill_confirm {
+            match key {
+                KeyCode::Char('y') | KeyCode::Char('Y') => {
+                    self.execute_kill();
+                    return;
+                }
+                KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                    self.show_kill_confirm = false;
+                    self.kill_target_pid = None;
+                    self.kill_target_name = None;
+                    return;
+                }
+                _ => return,
+            }
+        }
+
         // Close device popup if open
         if self.show_device_popup {
             match key {
@@ -348,6 +376,20 @@ impl App {
                     }
                 }
             }
+            KeyCode::Char('x') | KeyCode::Char('X') | KeyCode::Delete => {
+                // Kill process if in Processes tab
+                if let Some(tab) = self.active_tab() {
+                    if tab.node == TreeNode::Processes {
+                        let process_count = self.system_data.processes.len();
+                        if process_count > 0 && tab.selected_item < process_count {
+                            let proc = &self.system_data.processes[tab.selected_item];
+                            self.kill_target_pid = Some(proc.pid);
+                            self.kill_target_name = Some(proc.name.clone());
+                            self.show_kill_confirm = true;
+                        }
+                    }
+                }
+            }
             KeyCode::Char('w') => {
                 self.close_current_tab();
             }
@@ -383,6 +425,38 @@ impl App {
                 self.active_tab_index = self.tabs.len() - 1;
             }
         }
+    }
+
+    fn execute_kill(&mut self) {
+        if let Some(pid) = self.kill_target_pid {
+            let name = self.kill_target_name.clone().unwrap_or_default();
+
+            // Try to kill the process using kill command
+            let result = std::process::Command::new("kill")
+                .arg("-9")
+                .arg(pid.to_string())
+                .output();
+
+            match result {
+                Ok(output) => {
+                    if output.status.success() {
+                        self.status_message = Some(format!("Killed process {} (PID: {})", name, pid));
+                        // Refresh process list
+                        self.system_data.refresh();
+                    } else {
+                        let stderr = String::from_utf8_lossy(&output.stderr);
+                        self.status_message = Some(format!("Failed to kill {}: {}", name, stderr.trim()));
+                    }
+                }
+                Err(e) => {
+                    self.status_message = Some(format!("Error killing {}: {}", name, e));
+                }
+            }
+        }
+
+        self.show_kill_confirm = false;
+        self.kill_target_pid = None;
+        self.kill_target_name = None;
     }
 
     pub fn active_tab(&self) -> Option<&Tab> {

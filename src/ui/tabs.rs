@@ -65,7 +65,7 @@ pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
             TreeNode::Memory => widgets::memory::draw(frame, app, inner_area),
             TreeNode::Disks => widgets::disk::draw(frame, app, inner_area),
             TreeNode::Network => widgets::network::draw(frame, app, inner_area),
-            TreeNode::Processes => widgets::processes::draw(frame, app, inner_area, tab.scroll_offset),
+            TreeNode::Processes => widgets::processes::draw(frame, app, inner_area, tab.scroll_offset, tab.selected_item),
             TreeNode::Devices => widgets::devices::draw(frame, app, inner_area, tab.selected_item),
             TreeNode::Logs => widgets::logs::draw(frame, app, inner_area, tab.scroll_offset),
         }

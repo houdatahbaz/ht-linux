@@ -42,32 +42,77 @@ pub fn draw(frame: &mut Frame, app: &App) {
     if app.show_device_popup {
         draw_device_popup(frame, app);
     }
+
+    // Draw kill confirmation popup if active
+    if app.show_kill_confirm {
+        draw_kill_confirm(frame, app);
+    }
 }
 
 fn draw_command_line(frame: &mut Frame, app: &App, area: Rect) {
-    let content = match app.mode {
+    let (content, style) = match app.mode {
         Mode::Command => {
             let cursor = if app.command_error.is_some() { "" } else { "_" };
-            format!(":{}{}", app.command_buffer, cursor)
+            let text = format!(":{}{}", app.command_buffer, cursor);
+            let style = if app.command_error.is_some() {
+                Style::default().fg(Color::Red)
+            } else {
+                Style::default().fg(Color::White)
+            };
+            (text, style)
         }
         Mode::Normal => {
             if let Some(err) = &app.command_error {
-                err.clone()
+                (err.clone(), Style::default().fg(Color::Red))
+            } else if let Some(msg) = &app.status_message {
+                (msg.clone(), Style::default().fg(Color::Green))
             } else {
-                String::new()
+                (String::new(), Style::default().fg(Color::DarkGray))
             }
         }
     };
 
-    let style = if app.command_error.is_some() {
-        Style::default().fg(Color::Red)
-    } else if app.mode == Mode::Command {
-        Style::default().fg(Color::White)
-    } else {
-        Style::default().fg(Color::DarkGray)
-    };
-
     let paragraph = Paragraph::new(content).style(style);
+    frame.render_widget(paragraph, area);
+}
+
+fn draw_kill_confirm(frame: &mut Frame, app: &App) {
+    let area = centered_rect(50, 25, frame.area());
+
+    let pid = app.kill_target_pid.unwrap_or(0);
+    let name = app.kill_target_name.as_deref().unwrap_or("unknown");
+
+    let lines = vec![
+        Line::from(Span::styled(
+            "Kill Process?",
+            Style::default().bold().fg(Color::Red),
+        )),
+        Line::from(""),
+        Line::from(format!("Process: {}", name)),
+        Line::from(format!("PID: {}", pid)),
+        Line::from(""),
+        Line::from("This will forcefully terminate the process (SIGKILL)."),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("[Y]", Style::default().fg(Color::Green).bold()),
+            Span::raw("es  "),
+            Span::styled("[N]", Style::default().fg(Color::Red).bold()),
+            Span::raw("o"),
+        ]),
+    ];
+
+    let block = Block::default()
+        .title(" Confirm Kill ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Red))
+        .style(Style::default().bg(Color::Black));
+
+    let paragraph = Paragraph::new(lines)
+        .block(block)
+        .wrap(Wrap { trim: false })
+        .alignment(Alignment::Center);
+
+    frame.render_widget(Clear, area);
     frame.render_widget(paragraph, area);
 }
 
@@ -162,6 +207,7 @@ fn draw_help(frame: &mut Frame) {
         Line::from(""),
         Line::from("Actions:").style(Style::default().bold()),
         Line::from("  w           Close current tab"),
+        Line::from("  x/Delete    Kill selected process (in Processes tab)"),
         Line::from("  ?           Toggle this help"),
         Line::from(""),
         Line::from("Press ? or Esc to close").style(Style::default().fg(Color::DarkGray)),
