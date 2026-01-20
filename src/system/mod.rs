@@ -326,33 +326,79 @@ impl SystemData {
     }
 
     fn refresh_logs(&mut self) {
-        // Try to get recent kernel messages
-        if let Ok(output) = Command::new("dmesg")
-            .arg("--time-format")
-            .arg("reltime")
-            .arg("-T")
+        self.logs.clear();
+
+        // Try journalctl first (usually works without sudo)
+        if let Ok(output) = Command::new("journalctl")
+            .args(["--no-pager", "-n", "100", "--output=short"])
             .output()
         {
             let stdout = String::from_utf8_lossy(&output.stdout);
-            self.logs = stdout
-                .lines()
-                .rev()
-                .take(100)
-                .map(|s| s.to_string())
-                .collect();
-            self.logs.reverse();
-        } else if let Ok(output) = Command::new("dmesg").output() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            self.logs = stdout
-                .lines()
-                .rev()
-                .take(100)
-                .map(|s| s.to_string())
-                .collect();
-            self.logs.reverse();
-        } else {
-            self.logs = vec!["Unable to read system logs (try running with sudo)".to_string()];
+            if !stdout.trim().is_empty() && output.status.success() {
+                self.logs = stdout
+                    .lines()
+                    .map(|s| s.to_string())
+                    .collect();
+                return;
+            }
         }
+
+        // Try dmesg with timestamp
+        if let Ok(output) = Command::new("dmesg")
+            .args(["-T", "--time-format=reltime"])
+            .output()
+        {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if !stdout.trim().is_empty() {
+                self.logs = stdout
+                    .lines()
+                    .rev()
+                    .take(100)
+                    .map(|s| s.to_string())
+                    .collect();
+                self.logs.reverse();
+                return;
+            }
+        }
+
+        // Try plain dmesg
+        if let Ok(output) = Command::new("dmesg").output() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if !stdout.trim().is_empty() {
+                self.logs = stdout
+                    .lines()
+                    .rev()
+                    .take(100)
+                    .map(|s| s.to_string())
+                    .collect();
+                self.logs.reverse();
+                return;
+            }
+        }
+
+        // Try reading /var/log/syslog or /var/log/messages
+        for log_path in ["/var/log/syslog", "/var/log/messages"] {
+            if let Ok(content) = std::fs::read_to_string(log_path) {
+                self.logs = content
+                    .lines()
+                    .rev()
+                    .take(100)
+                    .map(|s| s.to_string())
+                    .collect();
+                self.logs.reverse();
+                return;
+            }
+        }
+
+        // Nothing worked
+        self.logs = vec![
+            "Unable to read system logs.".to_string(),
+            "".to_string(),
+            "Try one of:".to_string(),
+            "  - Run with sudo: sudo cargo run".to_string(),
+            "  - Add user to systemd-journal group:".to_string(),
+            "    sudo usermod -aG systemd-journal $USER".to_string(),
+        ];
     }
 }
 
