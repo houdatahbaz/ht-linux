@@ -3,7 +3,6 @@ use std::process::Command;
 
 #[derive(Debug, Clone)]
 pub struct CpuInfo {
-    pub name: String,
     pub usage: f32,
     pub frequency: u64,
 }
@@ -19,7 +18,6 @@ pub struct MemoryInfo {
 
 #[derive(Debug, Clone)]
 pub struct DiskInfo {
-    pub name: String,
     pub mount_point: String,
     pub total: u64,
     pub available: u64,
@@ -132,9 +130,7 @@ impl SystemData {
             .sys
             .cpus()
             .iter()
-            .enumerate()
-            .map(|(i, cpu)| CpuInfo {
-                name: format!("CPU {}", i),
+            .map(|cpu| CpuInfo {
                 usage: cpu.cpu_usage(),
                 frequency: cpu.frequency(),
             })
@@ -154,7 +150,6 @@ impl SystemData {
             .disks
             .iter()
             .map(|disk| DiskInfo {
-                name: disk.name().to_string_lossy().to_string(),
                 mount_point: disk.mount_point().to_string_lossy().to_string(),
                 total: disk.total_space(),
                 available: disk.available_space(),

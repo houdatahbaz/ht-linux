@@ -60,19 +60,6 @@ impl TreeNode {
         }
     }
 
-    pub fn shortcut_key(&self) -> char {
-        match self {
-            TreeNode::Overview => '*',
-            TreeNode::Cpu => 'c',
-            TreeNode::Memory => 'm',
-            TreeNode::Disks => 'd',
-            TreeNode::Network => 'n',
-            TreeNode::Processes => 'p',
-            TreeNode::Devices => 'v',
-            TreeNode::Logs => 'l',
-        }
-    }
-
     pub fn from_shortcut(key: char) -> Option<TreeNode> {
         match key.to_ascii_lowercase() {
             '*' => Some(TreeNode::Overview),
@@ -504,9 +491,5 @@ impl App {
 
     pub fn active_tab(&self) -> Option<&Tab> {
         self.tabs.get(self.active_tab_index)
-    }
-
-    pub fn active_tab_mut(&mut self) -> Option<&mut Tab> {
-        self.tabs.get_mut(self.active_tab_index)
     }
 }
