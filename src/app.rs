@@ -331,13 +331,11 @@ impl App {
             return;
         }
 
-        // Handle shortcut keys to open tabs directly (only when focused on tree)
-        if self.focus == Focus::Tree {
-            if let KeyCode::Char(c) = key {
-                if let Some(node) = TreeNode::from_shortcut(c) {
-                    self.open_tab_by_node(node);
-                    return;
-                }
+        // Handle shortcut keys to open tabs directly (works from any pane)
+        if let KeyCode::Char(c) = key {
+            if let Some(node) = TreeNode::from_shortcut(c) {
+                self.open_tab_by_node(node);
+                return;
             }
         }
 

@@ -7,14 +7,9 @@ use ratatui::{
 pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
     let is_focused = app.focus == Focus::Tree;
 
-    let border_style = if is_focused {
-        Style::default().fg(Color::Cyan)
-    } else {
-        Style::default().fg(Color::DarkGray)
-    };
+    let border_style = Style::default().fg(Color::Green);
 
     let block = Block::default()
-        .title(" Navigator ")
         .borders(Borders::ALL)
         .border_style(border_style);
 

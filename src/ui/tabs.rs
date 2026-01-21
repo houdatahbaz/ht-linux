@@ -1,4 +1,4 @@
-use crate::app::{App, Focus, TreeNode};
+use crate::app::{App, TreeNode};
 use crate::ui::widgets;
 use ratatui::{
     prelude::*,
@@ -6,13 +6,7 @@ use ratatui::{
 };
 
 pub fn draw(frame: &mut Frame, app: &App, area: Rect) {
-    let is_focused = app.focus == Focus::Tabs;
-
-    let border_style = if is_focused {
-        Style::default().fg(Color::Cyan)
-    } else {
-        Style::default().fg(Color::DarkGray)
-    };
+    let border_style = Style::default().fg(Color::Green);
 
     // Draw active tab content directly (no tab bar)
     if let Some(tab) = app.active_tab() {
