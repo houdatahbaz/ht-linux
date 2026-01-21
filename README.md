@@ -4,11 +4,11 @@ A terminal-based Linux system monitor with an Outlook-style interface, built wit
 
 ## Features
 
-- **Tree Navigator** - Left pane with collapsible system categories
-- **Dynamic Tabs** - Open multiple views simultaneously, switch between them
+- **Quick Shortcuts** - Press `c` for CPU, `m` for Memory, `p` for Processes, etc.
+- **Tree Navigator** - Left pane with system categories
 - **Live Monitoring** - Auto-refresh every 2 seconds
 - **Vim-like Commands** - `:q` to quit, `:help` for help
-- **Device Details** - View detailed info for any device in a popup
+- **Process Management** - Kill processes directly from the Processes view
 
 ### System Views
 
@@ -50,21 +50,33 @@ cargo build --release
 
 ### Keyboard Controls
 
+#### Quick Shortcuts
+Jump directly to any view by pressing its shortcut key:
+
+| Key | View |
+|-----|------|
+| `*` | Overview |
+| `c` | CPU |
+| `m` | Memory |
+| `d` | Disks |
+| `n` | Network |
+| `p` | Processes |
+| `v` | Devices |
+| `l` | Logs |
+
 #### Navigation
 | Key | Action |
 |-----|--------|
-| `Tab` | Switch focus between tree and tabs |
+| `Tab` | Switch focus between panes |
 | `j` / `↓` | Move down / Select next item |
 | `k` / `↑` | Move up / Select previous item |
-| `l` / `→` / `Enter` | Open tab / Next tab / Select |
-| `h` / `←` | Previous tab |
-| `1-9` | Quick switch to tab by number |
+| `Enter` | Open selected item / View details |
 
 #### Actions
 | Key | Action |
 |-----|--------|
 | `w` | Close current tab |
-| `Enter` | Open device details (in Devices view) |
+| `x` / `Delete` | Kill selected process (in Processes view) |
 | `?` | Toggle help overlay |
 | `Esc` | Close popup / Cancel command |
 
@@ -72,17 +84,15 @@ cargo build --release
 | Command | Action |
 |---------|--------|
 | `:q` | Quit application |
-| `:quit` | Quit application |
 | `:help` | Show help |
 
 ### Workflow
 
-1. Use `j`/`k` to navigate the tree on the left
-2. Press `Enter` or `l` to open a view as a tab
-3. Press `Tab` to switch focus to the tabs area
-4. Use `h`/`l` to switch between open tabs
-5. In the Devices view, select a device and press `Enter` to see details
-6. Press `:q` to quit
+1. Press a shortcut key (`c`, `m`, `p`, etc.) to jump to any view
+2. Or use `j`/`k` to navigate the tree and `Enter` to open
+3. In the Processes view, press `x` to kill a selected process
+4. In the Devices view, press `Enter` to see device details
+5. Press `:q` to quit
 
 ## Project Structure
 
